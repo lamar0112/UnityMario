@@ -295,7 +295,6 @@ public class MasterSetup : Editor
         fill.color = new Color(0.5f, 0.6f, 1f);
         fillGO.transform.rotation = Quaternion.Euler(25f, 155f, 0f);
 
-        // PENSUM: RenderSettings (Chapter 4)
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color(0.65f, 0.82f, 0.92f);
         RenderSettings.fogMode = FogMode.Linear;
@@ -307,11 +306,10 @@ public class MasterSetup : Editor
     }
 
     // ============================================================
-    // SKYBOX - uses AllSky Free if available
+    // SKYBOX
     // ============================================================
     static void SetupSkybox()
     {
-        // Try AllSky skybox materials
         string[] skyboxPaths = {
             "Assets/AllSkyFree/Materials/AllSky_Generic_05.mat",
             "Assets/AllSkyFree/Materials/AllSky_Space_AnotherPlanet.mat",
@@ -354,12 +352,10 @@ public class MasterSetup : Editor
                         + Mathf.PerlinNoise(nx * 7f + 2f, nz * 7f + 2f) * 0.08f
                         + Mathf.PerlinNoise(nx * 1.5f, nz * 1.5f) * 0.25f;
 
-                // Flat path down the middle
                 float distFromCenter = Mathf.Abs(nx - 0.5f);
                 float pathInfluence = Mathf.Clamp01(1f - distFromCenter * 3.5f);
                 h = Mathf.Lerp(h, 0.04f, pathInfluence * 0.75f);
 
-                // Fade edges
                 float edgeFade = Mathf.Min(
                     Mathf.Clamp01(nx * 6f), Mathf.Clamp01((1f - nx) * 6f),
                     Mathf.Clamp01(nz * 6f), Mathf.Clamp01((1f - nz) * 6f));
@@ -368,13 +364,11 @@ public class MasterSetup : Editor
         }
         data.SetHeights(0, 0, heights);
 
-        // Terrain layers - PENSUM: Terrain textures (Chapter 4)
         var grass = MakeTerrainLayer("Grass", new Color(0.28f, 0.58f, 0.22f));
         var dirt  = MakeTerrainLayer("Dirt",  new Color(0.52f, 0.36f, 0.2f));
         var rock  = MakeTerrainLayer("Rock",  new Color(0.48f, 0.48f, 0.48f));
         data.terrainLayers = new TerrainLayer[] { grass, dirt, rock };
 
-        // Paint textures by slope
         float[,,] alpha = new float[data.alphamapWidth, data.alphamapHeight, 3];
         for (int x = 0; x < data.alphamapWidth; x++)
         {
@@ -386,9 +380,9 @@ public class MasterSetup : Editor
                 float slope = 1f - normal.y;
                 float height = data.GetInterpolatedHeight(nx, nz) / data.size.y;
 
-                alpha[x, z, 0] = Mathf.Clamp01(1f - slope * 1.8f);  // grass
-                alpha[x, z, 1] = Mathf.Clamp01(slope * 1.5f);        // dirt
-                alpha[x, z, 2] = Mathf.Clamp01(height - 0.55f) * 4f; // rock on peaks
+                alpha[x, z, 0] = Mathf.Clamp01(1f - slope * 1.8f);
+                alpha[x, z, 1] = Mathf.Clamp01(slope * 1.5f);
+                alpha[x, z, 2] = Mathf.Clamp01(height - 0.55f) * 4f;
             }
         }
         data.SetAlphamaps(0, 0, alpha);
@@ -431,7 +425,6 @@ public class MasterSetup : Editor
     // ============================================================
     static void BuildWater()
     {
-        // Try Simple Water Shader first
         string[] waterMatPaths = {
             "Assets/IgniteCoders/SimpleWaterShaderURP/Materials/Water.mat",
             "Assets/IgniteCoders/SimpleWaterShaderURP/Materials/SimpleWater.mat",
@@ -456,9 +449,8 @@ public class MasterSetup : Editor
         water.transform.position = new Vector3(0, -1.8f, 25);
         water.transform.localScale = new Vector3(12, 1, 12);
         water.GetComponent<Renderer>().sharedMaterial = waterMat;
-        // Water damages player on contact - PENSUM: Trigger (Chapter 6)
         var col = water.GetComponent<Collider>();
-        col.isTrigger = false; // Use box collider instead
+        col.isTrigger = false;
         var bc = water.AddComponent<BoxCollider>();
         bc.isTrigger = true;
         bc.size = new Vector3(1, 2, 1);
@@ -474,14 +466,12 @@ public class MasterSetup : Editor
         var rockParent = new GameObject("Rocks");
         var bushParent = new GameObject("Bushes");
 
-        // Try to find Kenney or SimpleNaturePack trees
         string[] treePaths = FindAssetPaths("t:GameObject", new[]{ "tree", "Tree", "pine", "Pine", "oak" },
             new[]{ KENNEY_NATURE, SIMPLE_NATURE });
 
         string[] rockPaths = FindAssetPaths("t:GameObject", new[]{ "rock", "Rock", "stone", "Stone" },
             new[]{ KENNEY_NATURE, SIMPLE_NATURE });
 
-        // Place 35 trees around the level
         for (int i = 0; i < 35; i++)
         {
             float x = Random.Range(-45f, 45f);
@@ -503,7 +493,6 @@ public class MasterSetup : Editor
             }
         }
 
-        // Place 20 rocks
         for (int i = 0; i < 20; i++)
         {
             float x = Random.Range(-40f, 40f);
@@ -526,7 +515,6 @@ public class MasterSetup : Editor
             }
         }
 
-        // Place bushes as primitives
         for (int i = 0; i < 28; i++)
         {
             float x = Random.Range(-35f, 35f);
@@ -550,7 +538,6 @@ public class MasterSetup : Editor
         var fallingMat = MakeMaterial("FallingPlatMat", new Color(0.88f, 0.38f, 0.18f));
         var goalMat = MakeMaterial("GoalPlatMat", new Color(0.88f, 0.78f, 0.08f));
 
-        // Platform layout: position, size, type
         var platforms = new (Vector3 pos, Vector3 size, string type)[]
         {
             (new Vector3(0,    0.2f,  0),  new Vector3(8, 0.4f, 5),  "start"),
@@ -603,12 +590,10 @@ public class MasterSetup : Editor
             }
         }
 
-        // Jump pads - PENSUM: Trigger (Chapter 6)
         PlaceJumpPad("JumpPad_1", new Vector3(0,  0.3f,  4));
         PlaceJumpPad("JumpPad_2", new Vector3(0,  5.6f, 31));
         PlaceJumpPad("JumpPad_3", new Vector3(0,  9.6f, 49));
 
-        // Lava hazard zone
         var lava = GameObject.CreatePrimitive(PrimitiveType.Plane);
         lava.name = "LavaZone";
         lava.transform.position = new Vector3(0, -1f, 20);
@@ -648,7 +633,6 @@ public class MasterSetup : Editor
             playerGO = new GameObject("Player");
             playerGO.transform.position = new Vector3(0, 1.1f, -4);
 
-            // Add YBot as visual child
             var yBotInst = (GameObject)PrefabUtility.InstantiatePrefab(yBot);
             yBotInst.name = "YBot_Visual";
             yBotInst.transform.SetParent(playerGO.transform);
@@ -669,11 +653,9 @@ public class MasterSetup : Editor
 
         playerGO.tag = "Player";
 
-        // Remove default collider
         var caps = playerGO.GetComponent<CapsuleCollider>();
         if (caps != null) Object.DestroyImmediate(caps);
 
-        // PENSUM: CharacterController (Chapter 5)
         var cc = playerGO.AddComponent<CharacterController>();
         cc.height = 2f;
         cc.radius = 0.4f;
@@ -683,7 +665,6 @@ public class MasterSetup : Editor
         playerGO.AddComponent<PlayerHealth>();
         playerGO.AddComponent<PlayerRespawn>();
 
-        // PENSUM: Animator component (Lecture 9)
         var anim = playerGO.AddComponent<Animator>();
         if (animController != null)
             anim.runtimeAnimatorController = animController;
@@ -733,12 +714,10 @@ public class MasterSetup : Editor
             orb.transform.localScale = Vector3.one * 0.42f;
             orb.transform.SetParent(parent.transform);
 
-            // PENSUM: Trigger collider (Chapter 6)
             orb.GetComponent<SphereCollider>().isTrigger = true;
             orb.GetComponent<Renderer>().sharedMaterial = orbMat;
             orb.AddComponent<Collectible>();
 
-            // Glow light
             var light = orb.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = new Color(1f, 0.88f, 0.3f);
@@ -775,7 +754,6 @@ public class MasterSetup : Editor
             enemy.transform.SetParent(parent.transform);
             enemy.GetComponent<Renderer>().sharedMaterial = enemyMat;
 
-            // PENSUM: FSM AI (Lecture 5-6)
             var fsm = enemy.AddComponent<EnemyFSM>();
 
             var wp1 = new GameObject("WP_A");
@@ -791,7 +769,6 @@ public class MasterSetup : Editor
             so.FindProperty("waypoints").GetArrayElementAtIndex(1).objectReferenceValue = wp2.transform;
             so.ApplyModifiedProperties();
 
-            // PENSUM: Animator (Lecture 9)
             var anim = enemy.AddComponent<Animator>();
             if (enemyAnimCtrl != null) anim.runtimeAnimatorController = enemyAnimCtrl;
             anim.applyRootMotion = false;
@@ -799,7 +776,7 @@ public class MasterSetup : Editor
     }
 
     // ============================================================
-    // CHECKPOINTS - PENSUM: Triggers + Renderer (Ch 6+4)
+    // CHECKPOINTS
     // ============================================================
     static void PlaceCheckpoints()
     {
@@ -818,7 +795,6 @@ public class MasterSetup : Editor
 
         var script = cp.AddComponent<Checkpoint>();
 
-        // Visual flag
         var pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         pole.name = "Pole";
         pole.transform.SetParent(cp.transform);
@@ -840,7 +816,7 @@ public class MasterSetup : Editor
     }
 
     // ============================================================
-    // FINISH PORTAL - PENSUM: Trigger + Particle System (Ch 6+16)
+    // FINISH PORTAL
     // ============================================================
     static void PlaceFinishPortal()
     {
@@ -850,15 +826,13 @@ public class MasterSetup : Editor
         portal.transform.localScale = new Vector3(2.2f, 2.8f, 2.2f);
         portal.GetComponent<Collider>().isTrigger = true;
 
-        var script = portal.AddComponent<FinishPortal>();
+        portal.AddComponent<FinishPortal>();
 
-        // PENSUM: Material color (Chapter 4)
         var mat = MakeMaterial("PortalMat", new Color(0.05f, 0.88f, 1f));
         mat.SetFloat("_Metallic", 0.75f);
         mat.SetFloat("_Smoothness", 0.9f);
         portal.GetComponent<Renderer>().sharedMaterial = mat;
 
-        // PENSUM: Particle System (Chapter 16)
         var ps = portal.AddComponent<ParticleSystem>();
         var main = ps.main;
         main.startColor = new Color(0.05f, 0.85f, 1f, 0.8f);
@@ -868,7 +842,6 @@ public class MasterSetup : Editor
         main.loop = true;
         main.maxParticles = 80;
 
-        // Glow light
         var glow = portal.AddComponent<Light>();
         glow.type = LightType.Point;
         glow.color = new Color(0.05f, 0.85f, 1f);
@@ -889,10 +862,9 @@ public class MasterSetup : Editor
         cam.farClipPlane = 160f;
         cam.nearClipPlane = 0.1f;
         camGO.AddComponent<AudioListener>();
-        var follow = camGO.AddComponent<CameraFollow>();
+        camGO.AddComponent<CameraFollow>();
         camGO.transform.position = new Vector3(0, 6, -12);
         camGO.transform.rotation = Quaternion.Euler(15, 0, 0);
-        // CameraFollow finds Player by tag automatically
     }
 
     // ============================================================
@@ -982,7 +954,7 @@ public class MasterSetup : Editor
     }
 
     // ============================================================
-    // MAIN MENU SCENE - PENSUM: SceneManagement (Chapter 23)
+    // MAIN MENU SCENE
     // ============================================================
     [MenuItem("ChaosQuest/5. Build Main Menu Scene")]
     public static void BuildMainMenu()
@@ -1008,7 +980,6 @@ public class MasterSetup : Editor
         canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
         canvas.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
-        // Background
         var bg = new GameObject("Background");
         bg.transform.SetParent(canvas.transform, false);
         var bgImg = bg.AddComponent<UnityEngine.UI.Image>();
@@ -1026,7 +997,6 @@ public class MasterSetup : Editor
 
         var menuScript = canvas.AddComponent<MainMenu>();
 
-        // Controls panel
         var ctrlPanel = new GameObject("ControlsPanel");
         ctrlPanel.transform.SetParent(canvas.transform, false);
         var ctrlBg = ctrlPanel.AddComponent<UnityEngine.UI.Image>();
@@ -1042,7 +1012,6 @@ public class MasterSetup : Editor
         ctrlPanel.SetActive(false);
 
         var menuSo = new SerializedObject(menuScript);
-        menuSo.FindProperty("mainPanel").objectReferenceValue = canvas.transform.Find("StartBtn")?.gameObject.transform.parent?.gameObject;
         menuSo.FindProperty("controlsPanel").objectReferenceValue = ctrlPanel;
         menuSo.ApplyModifiedProperties();
 
@@ -1083,12 +1052,7 @@ public class MasterSetup : Editor
             "Commit:\n" +
             "git commit -m \"Complete game setup with YBot and Level 1\"\n\n" +
             "Push:\n" +
-            "git push\n\n" +
-            "First time? Run these first:\n" +
-            "git init\n" +
-            "git remote add origin YOUR_GITHUB_URL\n" +
-            "git branch -M main\n" +
-            "git push -u origin main",
+            "git push",
             "Got it!");
     }
 
@@ -1130,8 +1094,7 @@ public class MasterSetup : Editor
 
     static AnimationClip GetClip(Dictionary<string, AnimationClip> clips, string key)
     {
-        AnimationClip clip;
-        clips.TryGetValue(key, out clip);
+        clips.TryGetValue(key, out AnimationClip clip);
         return clip;
     }
 
@@ -1302,99 +1265,5 @@ public class MasterSetup : Editor
         var r = go.GetComponent<RectTransform>();
         r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one;
         r.offsetMin = r.offsetMax = Vector2.zero;
-    }
-}
-
-// ============================================================
-// MOVING PLATFORM - PENSUM: Transform, Coroutine (Ch 6+8)
-// ============================================================
-public class MovingPlatform : MonoBehaviour
-{
-    [SerializeField] private Transform pointA;
-    [SerializeField] private Transform pointB;
-    [SerializeField] private float speed = 2.2f;
-    [SerializeField] private float waitTime = 0.6f;
-    private Vector3 target;
-    private bool waiting;
-
-    private void Start()
-    {
-        if (pointA && pointB) target = pointB.position;
-        else enabled = false;
-    }
-
-    private void Update()
-    {
-        if (waiting) return;
-        transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
-        if (Vector3.Distance(transform.position, target) < 0.05f)
-            StartCoroutine(Switch());
-    }
-
-    private System.Collections.IEnumerator Switch()
-    {
-        waiting = true;
-        yield return new WaitForSeconds(waitTime);
-        target = (target == pointA.position) ? pointB.position : pointA.position;
-        waiting = false;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    { if (other.CompareTag("Player")) other.transform.SetParent(transform); }
-
-    private void OnTriggerExit(Collider other)
-    { if (other.CompareTag("Player")) other.transform.SetParent(null); }
-}
-
-// ============================================================
-// FALLING PLATFORM - PENSUM: Rigidbody, Coroutine (Ch 6+8)
-// ============================================================
-public class FallingPlatform : MonoBehaviour
-{
-    [SerializeField] private float fallDelay = 0.75f;
-    [SerializeField] private float respawnTime = 4f;
-    private Rigidbody rb;
-    private Vector3 startPos;
-    private Quaternion startRot;
-    private bool falling;
-
-    private void Awake()
-    {
-        rb = gameObject.AddComponent<Rigidbody>();
-        rb.isKinematic = true;
-        startPos = transform.position;
-        startRot = transform.rotation;
-    }
-
-    private void OnCollisionEnter(Collision col)
-    {
-        if (!col.gameObject.CompareTag("Player") || falling) return;
-        StartCoroutine(Fall());
-    }
-
-    private System.Collections.IEnumerator Fall()
-    {
-        falling = true;
-        yield return new WaitForSeconds(fallDelay);
-        rb.isKinematic = false;
-        yield return new WaitForSeconds(respawnTime);
-        rb.isKinematic = true;
-        rb.linearVelocity = rb.angularVelocity = Vector3.zero;
-        transform.SetPositionAndRotation(startPos, startRot);
-        falling = false;
-    }
-}
-
-// ============================================================
-// JUMP PAD - PENSUM: Trigger (Chapter 6)
-// ============================================================
-public class JumpPad : MonoBehaviour
-{
-    [SerializeField] private float force = 18f;
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-        other.GetComponent<PlayerController>()?.ApplyJumpPadForce(force);
-        AudioManager.Instance?.PlayJump();
     }
 }
